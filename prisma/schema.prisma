@@ -7,11 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id                        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name                      String     @db.VarChar(50)
   email                     String     @db.VarChar(255) @unique
   password                  String     @db.VarChar(100)
+  role                      Role       @default(USER)
+  products                  Product[]
+  createdAt                 DateTime   @default(now()) @db.Timestamp(6)
+  updatedAt                 DateTime   @updatedAt
+}
+
+model Product {
+  id                        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                     String     @db.VarChar(50)
+  description               String     @db.VarChar(255)
+  price                     Decimal    @db.Decimal(10, 2)
+  ownerId                   String     @db.Uuid
+  owner                     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   createdAt                 DateTime   @default(now()) @db.Timestamp(6)
   updatedAt                 DateTime   @updatedAt
 }

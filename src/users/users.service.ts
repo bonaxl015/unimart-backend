@@ -19,7 +19,7 @@ export class UsersService {
 
 		const hashedPassword = await bcrypt.hash(data.password, 12);
 
-		const user: Omit<User, 'password'> = await this.prisma.user.create({
+		const user: Omit<User, 'password' | 'role'> = await this.prisma.user.create({
 			data: {
 				email: data.email,
 				name: data.name,

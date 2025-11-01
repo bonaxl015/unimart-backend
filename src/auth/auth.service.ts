@@ -3,11 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-
-interface JwtPayload {
-	sub: string;
-	email: string;
-}
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +28,10 @@ export class AuthService {
 		}
 
 		const payload: JwtPayload = { sub: user.id, email: user.email };
-		const token = await this.jwtService.signAsync(payload);
+		const token = await this.jwtService.signAsync(payload, {
+			secret: process.env.JWT_SECRET!,
+			expiresIn: '30d'
+		});
 
 		return { access_token: token };
 	}

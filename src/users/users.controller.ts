@@ -9,8 +9,8 @@ import type { AuthenticatedUser } from 'src/auth/interfaces/authenticated-reques
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
-	@Post('register')
-	async register(@Body() body: unknown) {
+	@Post('create')
+	async createUser(@Body() body: unknown) {
 		const parsedData: CreateUserDto = createUserSchema.parse(body);
 
 		return this.usersService.createUser(parsedData);

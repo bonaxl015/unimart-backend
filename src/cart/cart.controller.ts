@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CartService } from './cart.service';
-import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from 'src/auth/interfaces/authenticated-request.interface';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { AddCartItemDto, addCartItemSchema } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto, updateCartItemSchema } from './dto/update-cart-item.dto';
 

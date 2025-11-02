@@ -1,10 +1,10 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { AuthenticatedUser } from 'src/auth/interfaces/authenticated-request.interface';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Prisma, Product, Role } from '@prisma/client';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { DeleteResponse } from 'src/types/delete-response.type';
+import { DeleteResponse } from '../types/delete-response.type';
 
 @Injectable()
 export class ProductsService {

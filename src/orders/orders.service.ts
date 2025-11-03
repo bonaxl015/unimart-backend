@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { Order, Prisma } from '@prisma/client';
@@ -16,6 +16,14 @@ export class OrdersService {
 
 		if (cartItems.length === 0) {
 			throw new NotFoundException('Cart is empty');
+		}
+
+		for (const item of cartItems) {
+			if (item.product.stock < item.quantity) {
+				throw new ForbiddenException(
+					`Insufficient stock for ${item.product.title}. Available ${item.product.stock}`
+				);
+			}
 		}
 
 		const total = cartItems.reduce((sum, item) => {
@@ -48,6 +56,18 @@ export class OrdersService {
 				}
 			}
 		});
+
+		// Decrement stock
+		for (const item of cartItems) {
+			await this.prisma.product.update({
+				where: { id: item.productId },
+				data: {
+					stock: {
+						decrement: item.quantity
+					}
+				}
+			});
+		}
 
 		// Clear the cart
 		await this.prisma.cartItem.deleteMany({

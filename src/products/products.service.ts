@@ -2,9 +2,10 @@ import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/commo
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Prisma, Product, Role } from '@prisma/client';
+import { Prisma, Product, ProductImage, Role } from '@prisma/client';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { DeleteResponse } from '../types/delete-response.type';
+import { AddProductImageDto } from './dto/add-product-image.dto';
 
 @Injectable()
 export class ProductsService {
@@ -25,14 +26,21 @@ export class ProductsService {
 	}
 
 	async getAllProducts(): Promise<Product[]> {
-		const productsList: Product[] = await this.prisma.product.findMany();
+		const productsList: Product[] = await this.prisma.product.findMany({
+			include: {
+				images: true
+			}
+		});
 
 		return productsList;
 	}
 
 	async getProductById(id: string): Promise<Product> {
 		const product = await this.prisma.product.findUnique({
-			where: { id }
+			where: { id },
+			include: {
+				images: true
+			}
 		});
 
 		if (!product) {
@@ -88,6 +96,42 @@ export class ProductsService {
 		return {
 			deleted: true,
 			message: 'Product deleted successfully'
+		};
+	}
+
+	async addProductImage(dto: AddProductImageDto): Promise<ProductImage> {
+		const product = await this.prisma.product.findUnique({
+			where: { id: dto.productId }
+		});
+
+		if (!product) {
+			throw new NotFoundException('Product not found');
+		}
+
+		return await this.prisma.productImage.create({
+			data: {
+				productId: dto.productId,
+				url: dto.url
+			}
+		});
+	}
+
+	async deleteProductImage(imageId: string): Promise<DeleteResponse> {
+		const image = await this.prisma.productImage.findUnique({
+			where: { id: imageId }
+		});
+
+		if (!image) {
+			throw new NotFoundException('Product image not found');
+		}
+
+		await this.prisma.productImage.delete({
+			where: { id: imageId }
+		});
+
+		return {
+			deleted: true,
+			message: 'Product image deleted successfully'
 		};
 	}
 }

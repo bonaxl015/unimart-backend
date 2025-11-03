@@ -40,7 +40,17 @@ export class ProductsService {
 		const product = await this.prisma.product.findUnique({
 			where: { id },
 			include: {
-				images: true
+				images: true,
+				reviews: {
+					include: {
+						user: {
+							select: {
+								id: true,
+								name: true
+							}
+						}
+					}
+				}
 			}
 		});
 

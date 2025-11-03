@@ -6,6 +6,7 @@ import { Prisma, Product, ProductImage, Role } from '@prisma/client';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { DeleteResponse } from '../types/delete-response.type';
 import { AddProductImageDto } from './dto/add-product-image.dto';
+import { UpdateProductStockDto } from './dto/update-product-stock.dto';
 
 @Injectable()
 export class ProductsService {
@@ -133,5 +134,20 @@ export class ProductsService {
 			deleted: true,
 			message: 'Product image deleted successfully'
 		};
+	}
+
+	async updateProductStock(productId: string, dto: UpdateProductStockDto): Promise<Product> {
+		const product = await this.prisma.product.findUnique({
+			where: { id: productId }
+		});
+
+		if (!product) {
+			throw new NotFoundException('Product not found');
+		}
+
+		return await this.prisma.product.update({
+			where: { id: productId },
+			data: { stock: dto.stock }
+		});
 	}
 }

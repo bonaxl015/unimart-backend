@@ -17,6 +17,7 @@ import { CreateProductDto, createProductSchema } from './dto/create-product.dto'
 import { UpdateProductDto, updateProductSchema } from './dto/update-product.dto';
 import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
+import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -73,5 +74,21 @@ export class ProductsController {
 		}
 
 		return this.productsService.deleteProductImage(id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Patch('stock/:id')
+	updateProductStock(
+		@CurrentUser() user: AuthenticatedUser,
+		@Param('id') id: string,
+		@Body() body: unknown
+	) {
+		if (user.role !== Role.ADMIN) {
+			throw new ForbiddenException('This feature is not available to user');
+		}
+
+		const parsedProductStock: UpdateProductStockDto = updateProductStockSchema.parse(body);
+
+		return this.productsService.updateProductStock(id, parsedProductStock);
 	}
 }

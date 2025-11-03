@@ -33,7 +33,11 @@ export class CartService {
 			throw new NotFoundException('Product not found');
 		}
 
-		const existingCartItem = await this.prisma.cartItem.findUnique({
+		if (product.stock < dto.quantity) {
+			throw new ForbiddenException(`Insufficient stock. Only ${product.stock} left`);
+		}
+
+		const existingCart = await this.prisma.cartItem.findUnique({
 			where: {
 				userId_productId: {
 					userId: user.userId,
@@ -42,7 +46,7 @@ export class CartService {
 			}
 		});
 
-		if (existingCartItem) {
+		if (existingCart) {
 			throw new ConflictException('Product already in cart');
 		}
 
@@ -53,7 +57,14 @@ export class CartService {
 				quantity: dto.quantity
 			},
 			include: {
-				product: true
+				product: true,
+				user: {
+					select: {
+						id: true,
+						name: true,
+						email: true
+					}
+				}
 			}
 		});
 	}

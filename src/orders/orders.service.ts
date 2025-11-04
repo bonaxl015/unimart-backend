@@ -1,64 +1,85 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
-import { Order, Prisma } from '@prisma/client';
+import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { PaymentsService } from '../payments/payments.service';
+import { CheckoutResponse } from '../types/checkout-response.type';
+import { StockProcessor } from './utils/stock-processor';
+import { PaymentProcessor } from './utils/payment-processor';
+import { OrderProcessor } from './utils/order-processor';
 
 @Injectable()
 export class OrdersService {
-	constructor(private readonly prisma: PrismaService) {}
+	private stockProcessor: StockProcessor;
+	private paymentProcessor: PaymentProcessor;
+	private orderProcessor: OrderProcessor;
 
-	async checkout(user: AuthenticatedUser): Promise<Order> {
-		const cartItems = await this.prisma.cartItem.findMany({
-			where: { userId: user.userId },
-			include: { product: true }
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly paymentsService: PaymentsService
+	) {
+		this.stockProcessor = new StockProcessor(prisma);
+		this.paymentProcessor = new PaymentProcessor(paymentsService);
+		this.orderProcessor = new OrderProcessor(prisma);
+	}
+
+	async initiateCheckout(user: AuthenticatedUser): Promise<CheckoutResponse> {
+		return await this.prisma.$transaction(async (tx) => {
+			const cartItems = await tx.cartItem.findMany({
+				where: { userId: user.userId },
+				include: { product: true }
+			});
+
+			if (cartItems.length === 0) {
+				throw new NotFoundException('Cart is empty');
+			}
+
+			this.stockProcessor.validateStock(cartItems);
+
+			const total = cartItems.reduce((sum, item) => {
+				return sum + parseFloat(item.product.price.toString()) * item.quantity;
+			}, 0);
+
+			// Create order with items
+			const order = await this.orderProcessor.createOrder(user.userId, total, cartItems, tx);
+
+			await this.stockProcessor.decrementStock(cartItems, tx);
+
+			// Create stripe payment intent
+			const paymentIntent = await this.paymentProcessor.createPayment(total, order.id, user.userId);
+
+			await this.orderProcessor.attachPaymentIntent(order.id, paymentIntent.id, tx);
+
+			return {
+				orderId: order.id,
+				clientSecret: paymentIntent.client_secret
+			};
+		});
+	}
+
+	async confirmPayment(orderId: string): Promise<Order> {
+		const order = await this.prisma.order.findUnique({
+			where: { id: orderId },
+			include: { items: true }
 		});
 
-		if (cartItems.length === 0) {
-			throw new NotFoundException('Cart is empty');
+		if (!order) {
+			throw new NotFoundException('Order not found');
 		}
 
-		for (const item of cartItems) {
-			if (item.product.stock < item.quantity) {
-				throw new ForbiddenException(
-					`Insufficient stock for ${item.product.title}. Available ${item.product.stock}`
-				);
-			}
+		if (!order.paymentIntentId) {
+			throw new ForbiddenException('No payment intent found for this order');
 		}
 
-		const total = cartItems.reduce((sum, item) => {
-			return sum + parseFloat(item.product.price.toString()) * item.quantity;
-		}, 0);
+		const paymentIntent = await this.paymentsService.retrievePaymentIntent(order.paymentIntentId);
 
-		// Create order with items
-		const order = await this.prisma.order.create({
-			data: {
-				userId: user.userId,
-				total: new Prisma.Decimal(total),
-				items: {
-					create: cartItems.map((item) => ({
-						productId: item.productId,
-						quantity: item.quantity,
-						price: new Prisma.Decimal(item.product.price)
-					}))
-				}
-			},
-			include: {
-				items: {
-					include: { product: true }
-				},
-				user: {
-					select: {
-						id: true,
-						email: true,
-						name: true
-					}
-				}
-			}
-		});
+		if (paymentIntent.status !== 'succeeded') {
+			throw new ForbiddenException('Payment not completed');
+		}
 
 		// Decrement stock
-		for (const item of cartItems) {
+		for (const item of order.items) {
 			await this.prisma.product.update({
 				where: { id: item.productId },
 				data: {
@@ -71,10 +92,24 @@ export class OrdersService {
 
 		// Clear the cart
 		await this.prisma.cartItem.deleteMany({
-			where: { userId: user.userId }
+			where: { userId: order.userId }
 		});
 
-		return order;
+		// Mark as paid and completed
+		const updatedOrder = await this.prisma.order.update({
+			where: { id: orderId },
+			data: {
+				status: OrderStatus.COMPLETED,
+				paymentStatus: PaymentStatus.PAID
+			},
+			include: {
+				items: {
+					include: { product: true }
+				}
+			}
+		});
+
+		return updatedOrder;
 	}
 
 	async getUserOrders(user: AuthenticatedUser): Promise<Order[]> {

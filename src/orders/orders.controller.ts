@@ -5,15 +5,23 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { Role } from '@prisma/client';
 import { UpdateOrderStatusDto, updateOrderStatusSchema } from './dto/update-order-status.dto';
+import { ConfirmPaymentDto, confirmPaymentSchema } from './dto/confirm-payment.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('orders')
 export class OrdersController {
 	constructor(private readonly ordersService: OrdersService) {}
 
-	@Post('checkout')
-	checkout(@CurrentUser() user: AuthenticatedUser) {
-		return this.ordersService.checkout(user);
+	@Post('initiate-checkout')
+	initiateCheckout(@CurrentUser() user: AuthenticatedUser) {
+		return this.ordersService.initiateCheckout(user);
+	}
+
+	@Post('confirm-payment')
+	confirmPayment(@Body() body: unknown) {
+		const parsedBody: ConfirmPaymentDto = confirmPaymentSchema.parse(body);
+
+		return this.ordersService.confirmPayment(parsedBody.orderId);
 	}
 
 	@Get('my')

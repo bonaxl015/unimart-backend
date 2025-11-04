@@ -85,6 +85,7 @@ model Order {
   total             Decimal        @db.Decimal(10, 2)
   paymentStatus     PaymentStatus  @default(PENDING)
   paymentIntentId   String?
+  reservedUntil     DateTime?
   createdAt         DateTime       @default(now()) @db.Timestamp(6)
   updatedAt         DateTime       @updatedAt
 }

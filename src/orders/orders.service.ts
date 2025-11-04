@@ -59,6 +59,8 @@ export class OrdersService {
 	}
 
 	async confirmPayment(orderId: string): Promise<Order> {
+		const now = new Date();
+
 		const order = await this.prisma.order.findUnique({
 			where: { id: orderId },
 			include: { items: true }
@@ -68,6 +70,23 @@ export class OrdersService {
 			throw new NotFoundException('Order not found');
 		}
 
+		// Check if paid
+		if (order.paymentStatus === PaymentStatus.PAID && order.status === OrderStatus.COMPLETED) {
+			throw new ForbiddenException('Order has already been paid');
+		}
+
+		// Check reservation expiry before payment confirmation
+		if (order.reservedUntil && order.reservedUntil < now) {
+			await this.prisma.order.update({
+				where: { id: orderId },
+				data: {
+					status: OrderStatus.CANCELED,
+					paymentStatus: PaymentStatus.FAILED
+				}
+			});
+		}
+
+		// Verify payment
 		if (!order.paymentIntentId) {
 			throw new ForbiddenException('No payment intent found for this order');
 		}
@@ -78,24 +97,7 @@ export class OrdersService {
 			throw new ForbiddenException('Payment not completed');
 		}
 
-		// Decrement stock
-		for (const item of order.items) {
-			await this.prisma.product.update({
-				where: { id: item.productId },
-				data: {
-					stock: {
-						decrement: item.quantity
-					}
-				}
-			});
-		}
-
-		// Clear the cart
-		await this.prisma.cartItem.deleteMany({
-			where: { userId: order.userId }
-		});
-
-		// Mark as paid and completed
+		// Mark as paid and completed upon successful payment
 		const updatedOrder = await this.prisma.order.update({
 			where: { id: orderId },
 			data: {
@@ -107,6 +109,11 @@ export class OrdersService {
 					include: { product: true }
 				}
 			}
+		});
+
+		// Clear the cart
+		await this.prisma.cartItem.deleteMany({
+			where: { userId: order.userId }
 		});
 
 		return updatedOrder;

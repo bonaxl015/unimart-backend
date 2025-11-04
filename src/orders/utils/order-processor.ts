@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ITXClientDenyList } from '@prisma/client/runtime/binary';
+import { MS_TO_MINUTES } from '../../const/time-conversion';
 
 export class OrderProcessor {
 	constructor(private readonly prisma: PrismaService) {}
@@ -18,12 +19,16 @@ export class OrderProcessor {
 		cartItems: (CartItem & { product: Product })[],
 		tx: Omit<PrismaClient, ITXClientDenyList>
 	) {
+		const reservationMinutes = 15; // 15 minutes
+		const reservedUntil = new Date(Date.now() + reservationMinutes * MS_TO_MINUTES);
+
 		return await tx.order.create({
 			data: {
 				userId: userId,
 				total: new Prisma.Decimal(total),
 				paymentStatus: PaymentStatus.PENDING,
 				status: OrderStatus.PENDING,
+				reservedUntil,
 				items: {
 					create: cartItems.map((item) => ({
 						productId: item.productId,

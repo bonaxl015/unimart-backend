@@ -7,6 +7,7 @@ import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { ReservationCleanerService } from './orders/reservation-cleaner.service';
 @Module({
 	imports: [
 		ConfigModule.forRoot({ isGlobal: true }),
@@ -17,6 +18,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 		CartModule,
 		OrdersModule,
 		ReviewsModule
-	]
+	],
+	providers: [ReservationCleanerService]
 })
 export class AppModule {}

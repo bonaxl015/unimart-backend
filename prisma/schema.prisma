@@ -18,6 +18,12 @@ enum OrderStatus {
   CANCELED
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
 model User {
   id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String         @db.VarChar(50)
@@ -77,6 +83,8 @@ model Order {
   items             OrderItem[]
   status            OrderStatus    @default(PENDING)
   total             Decimal        @db.Decimal(10, 2)
+  paymentStatus     PaymentStatus  @default(PENDING)
+  paymentIntentId   String?
   createdAt         DateTime       @default(now()) @db.Timestamp(6)
   updatedAt         DateTime       @updatedAt
 }

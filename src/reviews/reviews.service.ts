@@ -10,10 +10,16 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { OrderStatus, Review } from '@prisma/client';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { DeleteResponse } from '../types/delete-response.type';
+import { PaginationService } from '../common/services/pagination.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class ReviewsService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly paginationService: PaginationService
+	) {}
 
 	async createReview(user: AuthenticatedUser, dto: CreateReviewDto): Promise<Review> {
 		const product = await this.prisma.product.findUnique({
@@ -118,20 +124,22 @@ export class ReviewsService {
 		};
 	}
 
-	async getProductReviews(productId: string): Promise<Review[]> {
-		const productReviewList: Review[] = await this.prisma.review.findMany({
-			where: { productId },
-			include: {
+	async getProductReviews(
+		productId: string,
+		pagination: PaginationDto
+	): Promise<PaginatedResult<Review>> {
+		return this.paginationService.paginate(
+			this.prisma.review,
+			{ createdAt: 'desc' },
+			pagination,
+			[],
+			{ productId },
+			{
 				user: {
-					select: {
-						id: true,
-						name: true
-					}
+					select: { id: true, name: true }
 				}
 			}
-		});
-
-		return productReviewList;
+		);
 	}
 
 	async getAverageRating(productId: string) {

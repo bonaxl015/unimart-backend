@@ -19,29 +19,36 @@ import { UpdateProductDto, updateProductSchema } from './dto/update-product.dto'
 import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
 import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
-import { SearchFilterDto, searchFilterSchema } from './dto/search-filter.dto';
+import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
 
 @Controller('products')
 export class ProductsController {
 	constructor(private readonly productsService: ProductsService) {}
 
 	@Get()
-	getAll() {
-		return this.productsService.getAllProducts();
+	getAll(@Query() query: Record<string, string>) {
+		const pagination: PaginationDto = paginationSchema.parse({
+			page: query.page ? Number(query.page) : undefined,
+			limit: query.limit ? Number(query.limit) : undefined,
+			sortBy: query.sortBy,
+			sortOrder: query.sortOrder
+		});
+
+		return this.productsService.getAllProducts(pagination);
 	}
 
 	@Get('search')
-	searchAndFilter(@Query() query: Record<string, any>) {
-		const filters: SearchFilterDto = searchFilterSchema.parse({
-			q: query.q,
-			minPrice: query.minPrice ? Number(query.minPrice) : undefined,
-			maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
-			categoryId: query.categoryId,
-			inStock: query.inStock ? query.inStock === 'true' : undefined,
-			sortBy: query.sortBy
+	searchAndFilter(@Query() query: Record<string, string>) {
+		const pagination: PaginationDto = paginationSchema.parse({
+			page: query.page ? Number(query.page) : undefined,
+			limit: query.limit ? Number(query.limit) : undefined,
+			sortBy: query.sortBy,
+			sortOrder: query.sortOrder,
+			searchTerm: query.searchTerm,
+			filters: query.filters ? JSON.parse(query.filters) : undefined
 		});
 
-		return this.productsService.searchAndFilter(filters);
+		return this.productsService.searchAndFilter(pagination);
 	}
 
 	@Get(':id')

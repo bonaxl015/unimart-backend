@@ -7,34 +7,32 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { DeleteResponse } from '../types/delete-response.type';
 import { AddProductImageDto } from './dto/add-product-image.dto';
 import { UpdateProductStockDto } from './dto/update-product-stock.dto';
-import { SearchFilterDto } from './dto/search-filter.dto';
-import { SearchQueryBuilder } from './utils/search-query-builder';
+import { PaginationService } from '../common/services/pagination.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class ProductsService {
-	private searchQueryBuilder: SearchQueryBuilder;
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly paginationService: PaginationService
+	) {}
 
-	constructor(private readonly prisma: PrismaService) {
-		this.searchQueryBuilder = new SearchQueryBuilder();
-	}
-
-	async searchAndFilter(filters: SearchFilterDto): Promise<Product[]> {
-		const where = this.searchQueryBuilder.buildWhereClause(filters);
-		const orderBy = this.searchQueryBuilder.buildOrderByClause(filters.sortBy);
-
-		return await this.prisma.product.findMany({
-			where,
-			orderBy,
-			include: {
+	async searchAndFilter(pagination: PaginationDto): Promise<PaginatedResult<Product>> {
+		return this.paginationService.paginate(
+			this.prisma.product,
+			{ createdAt: 'desc' },
+			pagination,
+			['title', 'description'],
+			{},
+			{
 				images: true,
 				category: true,
 				reviews: {
-					select: {
-						rating: true
-					}
+					select: { rating: true }
 				}
 			}
-		});
+		);
 	}
 
 	async createProduct(user: AuthenticatedUser, data: CreateProductDto): Promise<Product> {
@@ -51,14 +49,15 @@ export class ProductsService {
 		});
 	}
 
-	async getAllProducts(): Promise<Product[]> {
-		const productsList: Product[] = await this.prisma.product.findMany({
-			include: {
-				images: true
-			}
-		});
-
-		return productsList;
+	async getAllProducts(pagination: PaginationDto): Promise<PaginatedResult<Product>> {
+		return await this.paginationService.paginate<Product>(
+			this.prisma.product,
+			{ createdAt: 'desc' },
+			pagination,
+			[],
+			{},
+			{ images: true, category: true }
+		);
 	}
 
 	async getProductById(id: string): Promise<Product> {

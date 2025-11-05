@@ -8,6 +8,9 @@ import { CheckoutResponse } from '../types/checkout-response.type';
 import { StockProcessor } from './utils/stock-processor';
 import { PaymentProcessor } from './utils/payment-processor';
 import { OrderProcessor } from './utils/order-processor';
+import { PaginationService } from '../common/services/pagination.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class OrdersService {
@@ -17,7 +20,8 @@ export class OrdersService {
 
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly paymentsService: PaymentsService
+		private readonly paymentsService: PaymentsService,
+		private readonly paginationService: PaginationService
 	) {
 		this.stockProcessor = new StockProcessor(prisma);
 		this.paymentProcessor = new PaymentProcessor(paymentsService);
@@ -119,38 +123,40 @@ export class OrdersService {
 		return updatedOrder;
 	}
 
-	async getUserOrders(user: AuthenticatedUser): Promise<Order[]> {
-		const orderList: Order[] = await this.prisma.order.findMany({
-			where: { userId: user.userId },
-			include: {
+	async getUserOrders(
+		user: AuthenticatedUser,
+		pagination: PaginationDto
+	): Promise<PaginatedResult<Order>> {
+		return this.paginationService.paginate(
+			this.prisma.order,
+			{ createdAt: 'desc' },
+			pagination,
+			[],
+			{ userId: user.userId },
+			{
 				items: {
 					include: { product: true }
 				}
-			},
-			orderBy: { createdAt: 'desc' }
-		});
-
-		return orderList;
+			}
+		);
 	}
 
-	async getAllOrders(): Promise<Order[]> {
-		const orderList: Order[] = await this.prisma.order.findMany({
-			include: {
+	async getAllOrders(pagination: PaginationDto): Promise<PaginatedResult<Order>> {
+		return this.paginationService.paginate(
+			this.prisma.order,
+			{ createdAt: 'desc' },
+			pagination,
+			[],
+			{},
+			{
 				items: {
 					include: { product: true }
 				},
 				user: {
-					select: {
-						email: true,
-						name: true,
-						role: true
-					}
+					select: { email: true, name: true, role: true }
 				}
-			},
-			orderBy: { createdAt: 'desc' }
-		});
-
-		return orderList;
+			}
+		);
 	}
 
 	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusDto): Promise<Order> {

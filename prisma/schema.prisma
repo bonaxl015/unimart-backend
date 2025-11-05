@@ -53,14 +53,23 @@ model Product {
   description       String         @db.VarChar(255)
   price             Decimal        @db.Decimal(10, 2)
   stock             Int            @default(0)
+  popularity        Int            @default(0)
   ownerId           String         @db.Uuid
   owner             User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categoryId        String?        @db.Uuid
+  category          Category?      @relation(fields: [categoryId], references: [id])
   images            ProductImage[]
   cartItems         CartItem[]
   orderItems        OrderItem[]
   reviews           Review[]
   createdAt         DateTime       @default(now()) @db.Timestamp(6)
   updatedAt         DateTime       @updatedAt
+}
+
+model Category {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String         @unique
+  products          Product[]
 }
 
 model CartItem {

@@ -7,10 +7,35 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { DeleteResponse } from '../types/delete-response.type';
 import { AddProductImageDto } from './dto/add-product-image.dto';
 import { UpdateProductStockDto } from './dto/update-product-stock.dto';
+import { SearchFilterDto } from './dto/search-filter.dto';
+import { SearchQueryBuilder } from './utils/search-query-builder';
 
 @Injectable()
 export class ProductsService {
-	constructor(private readonly prisma: PrismaService) {}
+	private searchQueryBuilder: SearchQueryBuilder;
+
+	constructor(private readonly prisma: PrismaService) {
+		this.searchQueryBuilder = new SearchQueryBuilder();
+	}
+
+	async searchAndFilter(filters: SearchFilterDto): Promise<Product[]> {
+		const where = this.searchQueryBuilder.buildWhereClause(filters);
+		const orderBy = this.searchQueryBuilder.buildOrderByClause(filters.sortBy);
+
+		return await this.prisma.product.findMany({
+			where,
+			orderBy,
+			include: {
+				images: true,
+				category: true,
+				reviews: {
+					select: {
+						rating: true
+					}
+				}
+			}
+		});
+	}
 
 	async createProduct(user: AuthenticatedUser, data: CreateProductDto): Promise<Product> {
 		if (user.role !== Role.ADMIN) {

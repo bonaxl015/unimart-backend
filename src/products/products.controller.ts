@@ -7,6 +7,7 @@ import {
 	Param,
 	Patch,
 	Post,
+	Query,
 	UseGuards
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
@@ -18,6 +19,7 @@ import { UpdateProductDto, updateProductSchema } from './dto/update-product.dto'
 import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
 import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
+import { SearchFilterDto, searchFilterSchema } from './dto/search-filter.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -26,6 +28,20 @@ export class ProductsController {
 	@Get()
 	getAll() {
 		return this.productsService.getAllProducts();
+	}
+
+	@Get('search')
+	searchAndFilter(@Query() query: Record<string, any>) {
+		const filters: SearchFilterDto = searchFilterSchema.parse({
+			q: query.q,
+			minPrice: query.minPrice ? Number(query.minPrice) : undefined,
+			maxPrice: query.maxPrice ? Number(query.maxPrice) : undefined,
+			categoryId: query.categoryId,
+			inStock: query.inStock ? query.inStock === 'true' : undefined,
+			sortBy: query.sortBy
+		});
+
+		return this.productsService.searchAndFilter(filters);
 	}
 
 	@Get(':id')

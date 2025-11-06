@@ -10,6 +10,8 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { ReservationCleanerService } from './orders/reservation-cleaner.service';
 import { CommonModule } from './common/common.module';
 import { LoggerModule } from './logger/logger.module';
+import { AuditLoggerInterceptor } from './common/interceptors/audit-logger.interceptor';
+import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 
 @Module({
 	imports: [
@@ -24,6 +26,7 @@ import { LoggerModule } from './logger/logger.module';
 		ReviewsModule,
 		CommonModule
 	],
-	providers: [ReservationCleanerService]
+	providers: [ReservationCleanerService, AuditLoggerInterceptor, SanitizeInterceptor],
+	exports: [AuditLoggerInterceptor, SanitizeInterceptor]
 })
 export class AppModule {}

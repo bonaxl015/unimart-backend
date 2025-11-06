@@ -9,10 +9,12 @@ import { OrdersModule } from './orders/orders.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ReservationCleanerService } from './orders/reservation-cleaner.service';
 import { CommonModule } from './common/common.module';
+import { LoggerModule } from './logger/logger.module';
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({ isGlobal: true }),
+		LoggerModule,
 		PrismaModule,
 		UsersModule,
 		AuthModule,

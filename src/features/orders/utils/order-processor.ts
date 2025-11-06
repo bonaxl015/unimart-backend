@@ -6,9 +6,9 @@ import {
 	PrismaClient,
 	Product
 } from '@prisma/client';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
 import { ITXClientDenyList } from '@prisma/client/runtime/binary';
-import { MS_TO_MINUTES } from '../../const/time-conversion';
+import { MS_TO_MINUTES } from '../../../constants/time-conversion';
 
 export class OrderProcessor {
 	constructor(private readonly prisma: PrismaService) {}

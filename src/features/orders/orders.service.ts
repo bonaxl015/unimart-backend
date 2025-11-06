@@ -1,16 +1,16 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { PaymentsService } from '../payments/payments.service';
-import { CheckoutResponse } from '../types/checkout-response.type';
+import { PaymentsService } from '../../core/payments/payments.service';
+import { CheckoutResponse } from '../../types/checkout-response.type';
 import { StockProcessor } from './utils/stock-processor';
 import { PaymentProcessor } from './utils/payment-processor';
 import { OrderProcessor } from './utils/order-processor';
-import { PaginationService } from '../common/services/pagination.service';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { PaginationService } from '../../common/services/pagination.service';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class OrdersService {

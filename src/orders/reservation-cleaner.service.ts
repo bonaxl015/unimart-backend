@@ -1,13 +1,15 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus, PaymentStatus } from '@prisma/client';
 import { Cron } from '@nestjs/schedule';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class ReservationCleanerService {
-	private readonly logger = new Logger(ReservationCleanerService.name);
-
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly logger: Logger
+	) {}
 
 	@Cron('*/1 * * * *') // every minute
 	async handleCron() {

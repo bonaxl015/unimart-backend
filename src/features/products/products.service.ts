@@ -1,15 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Prisma, Product, ProductImage } from '@prisma/client';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { DeleteResponse } from '../types/delete-response.type';
+import { DeleteResponse } from '../../types/delete-response.type';
 import { AddProductImageDto } from './dto/add-product-image.dto';
 import { UpdateProductStockDto } from './dto/update-product-stock.dto';
-import { PaginationService } from '../common/services/pagination.service';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { PaginationService } from '../../common/services/pagination.service';
+import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class ProductsService {

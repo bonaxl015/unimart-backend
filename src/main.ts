@@ -5,7 +5,7 @@ import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { MS_TO_MINUTES } from './const/time-conversion';
+import { MS_TO_MINUTES } from './constants/time-conversion';
 import { AuditLoggerInterceptor } from './common/interceptors/audit-logger.interceptor';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
 

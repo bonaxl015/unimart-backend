@@ -2,7 +2,7 @@ import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nes
 import { Logger } from 'nestjs-pino';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { AuthenticatedRequest } from '../../auth/interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../../features/auth/interfaces/authenticated-request.interface';
 
 @Injectable()
 export class AuditLoggerInterceptor implements NestInterceptor {

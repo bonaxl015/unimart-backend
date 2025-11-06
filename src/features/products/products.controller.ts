@@ -17,7 +17,7 @@ import { UpdateProductDto, updateProductSchema } from './dto/update-product.dto'
 import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
 import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
-import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
+import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';

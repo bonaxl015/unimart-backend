@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { PaginatedResult } from '../interfaces/paginated-result.interface';
 import { PaginationDto } from '../dto/pagination.dto';
 import { SortOrder } from '../enums/sort-order';

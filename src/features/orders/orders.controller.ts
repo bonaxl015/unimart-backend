@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request
 import { Role } from '@prisma/client';
 import { UpdateOrderStatusDto, updateOrderStatusSchema } from './dto/update-order-status.dto';
 import { ConfirmPaymentDto, confirmPaymentSchema } from './dto/confirm-payment.dto';
-import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
+import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 

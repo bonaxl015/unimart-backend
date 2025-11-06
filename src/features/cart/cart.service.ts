@@ -6,10 +6,10 @@ import {
 } from '@nestjs/common';
 import { CartItem } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../core/prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
-import { DeleteResponse } from '../types/delete-response.type';
+import { DeleteResponse } from '../../types/delete-response.type';
 
 @Injectable()
 export class CartService {

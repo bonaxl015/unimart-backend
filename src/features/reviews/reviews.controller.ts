@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateReviewDto, createReviewSchema } from './dto/create-review.dto';
 import { UpdateReviewDto, updateReviewSchema } from './dto/update-review.dto';
-import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
+import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('reviews')

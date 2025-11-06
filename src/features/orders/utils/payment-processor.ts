@@ -1,4 +1,4 @@
-import { PaymentsService } from '../../payments/payments.service';
+import { PaymentsService } from '../../../core/payments/payments.service';
 
 export class PaymentProcessor {
 	constructor(private readonly paymentsService: PaymentsService) {}

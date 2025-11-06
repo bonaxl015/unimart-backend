@@ -1,8 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { Prisma, Product, ProductImage, Role } from '@prisma/client';
+import { Prisma, Product, ProductImage } from '@prisma/client';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { DeleteResponse } from '../types/delete-response.type';
 import { AddProductImageDto } from './dto/add-product-image.dto';
@@ -36,10 +36,6 @@ export class ProductsService {
 	}
 
 	async createProduct(user: AuthenticatedUser, data: CreateProductDto): Promise<Product> {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
-
 		return await this.prisma.product.create({
 			data: {
 				...data,
@@ -85,15 +81,7 @@ export class ProductsService {
 		return product;
 	}
 
-	async updateProduct(
-		user: AuthenticatedUser,
-		id: string,
-		data: UpdateProductDto
-	): Promise<Product> {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
-
+	async updateProduct(id: string, data: UpdateProductDto): Promise<Product> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -111,11 +99,7 @@ export class ProductsService {
 		});
 	}
 
-	async deleteProduct(user: AuthenticatedUser, id: string): Promise<DeleteResponse> {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
-
+	async deleteProduct(id: string): Promise<DeleteResponse> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});

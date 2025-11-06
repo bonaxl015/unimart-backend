@@ -7,8 +7,10 @@ import { Role } from '@prisma/client';
 import { UpdateOrderStatusDto, updateOrderStatusSchema } from './dto/update-order-status.dto';
 import { ConfirmPaymentDto, confirmPaymentSchema } from './dto/confirm-payment.dto';
 import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrdersController {
 	constructor(private readonly ordersService: OrdersService) {}
@@ -36,11 +38,8 @@ export class OrdersController {
 	}
 
 	@Get('all')
-	getAllOrders(@CurrentUser() user: AuthenticatedUser, @Query() query: Record<string, string>) {
-		if (user.role !== Role.ADMIN) {
-			throw new Error('This feature is not available to users');
-		}
-
+	@Roles(Role.ADMIN)
+	getAllOrders(@Query() query: Record<string, string>) {
 		const parsedQuery: PaginationDto = paginationSchema.parse({
 			page: query.page ? Number(query.page) : undefined,
 			limit: query.limit ? Number(query.limit) : undefined
@@ -50,15 +49,8 @@ export class OrdersController {
 	}
 
 	@Patch(':id/status')
-	updateStatus(
-		@CurrentUser() user: AuthenticatedUser,
-		@Param('id') id: string,
-		@Body() body: unknown
-	) {
-		if (user.role !== Role.ADMIN) {
-			throw new Error('This feature is not available to users');
-		}
-
+	@Roles(Role.ADMIN)
+	updateStatus(@Param('id') id: string, @Body() body: unknown) {
 		const parsedOrder: UpdateOrderStatusDto = updateOrderStatusSchema.parse(body);
 
 		return this.ordersService.updateOrderStatus(id, parsedOrder);

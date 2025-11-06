@@ -2,7 +2,6 @@ import {
 	Body,
 	Controller,
 	Delete,
-	ForbiddenException,
 	Get,
 	Param,
 	Patch,
@@ -13,13 +12,15 @@ import {
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { CreateProductDto, createProductSchema } from './dto/create-product.dto';
 import { UpdateProductDto, updateProductSchema } from './dto/update-product.dto';
 import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
 import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
 import { PaginationDto, paginationSchema } from '../common/dto/pagination.dto';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('products')
 export class ProductsController {
@@ -56,60 +57,51 @@ export class ProductsController {
 		return this.productsService.getProductById(id);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Post('create')
+	@Roles(Role.ADMIN)
 	create(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
 		const parsedData: CreateProductDto = createProductSchema.parse(body);
 
 		return this.productsService.createProduct(user, parsedData);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Patch('update/:id')
-	update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() body: unknown) {
+	@Roles(Role.ADMIN)
+	update(@Param('id') id: string, @Body() body: unknown) {
 		const parsedData: UpdateProductDto = updateProductSchema.parse(body);
 
-		return this.productsService.updateProduct(user, id, parsedData);
+		return this.productsService.updateProduct(id, parsedData);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Delete('delete/:id')
-	delete(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-		return this.productsService.deleteProduct(user, id);
+	@Roles(Role.ADMIN)
+	delete(@Param('id') id: string) {
+		return this.productsService.deleteProduct(id);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Post('image')
-	addProductImage(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
+	@Roles(Role.ADMIN)
+	addProductImage(@Body() body: unknown) {
 		const parsedData: AddProductImageDto = addProductImageSchema.parse(body);
 
 		return this.productsService.addProductImage(parsedData);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Delete('image/:id')
-	deleteProductImage(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
-
+	@Roles(Role.ADMIN)
+	deleteProductImage(@Param('id') id: string) {
 		return this.productsService.deleteProductImage(id);
 	}
 
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Patch('stock/:id')
-	updateProductStock(
-		@CurrentUser() user: AuthenticatedUser,
-		@Param('id') id: string,
-		@Body() body: unknown
-	) {
-		if (user.role !== Role.ADMIN) {
-			throw new ForbiddenException('This feature is not available to user');
-		}
-
+	@Roles(Role.ADMIN)
+	updateProductStock(@Param('id') id: string, @Body() body: unknown) {
 		const parsedProductStock: UpdateProductStockDto = updateProductStockSchema.parse(body);
 
 		return this.productsService.updateProductStock(id, parsedProductStock);

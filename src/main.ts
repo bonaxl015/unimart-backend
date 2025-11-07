@@ -8,11 +8,16 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { MS_TO_MINUTES } from './constants/time-conversion';
 import { AuditLoggerInterceptor } from './common/interceptors/audit-logger.interceptor';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
+import { config } from './docs/configuration';
+import { SwaggerModule } from '@nestjs/swagger';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, {
 		bufferLogs: true
 	});
+
+	const document = SwaggerModule.createDocument(app, config);
 
 	// Secure HTTP headers
 	app.use(helmet());
@@ -29,11 +34,19 @@ async function bootstrap() {
 		})
 	);
 
-	app.setGlobalPrefix('api/v1');
+	app.setGlobalPrefix('api/v1', { exclude: [''] });
 
 	app.useLogger(app.get(Logger));
 
 	app.useGlobalInterceptors(app.get(AuditLoggerInterceptor), app.get(SanitizeInterceptor));
+
+	app.useGlobalPipes(new ZodValidationPipe());
+
+	SwaggerModule.setup('docs', app, document, {
+		swaggerOptions: {
+			persistAuthorization: true
+		}
+	});
 
 	app.useGlobalFilters(new GlobalExceptionFilter());
 

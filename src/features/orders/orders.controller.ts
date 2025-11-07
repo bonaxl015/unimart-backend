@@ -6,7 +6,7 @@ import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request
 import { Role } from '@prisma/client';
 import { UpdateOrderStatusDto, updateOrderStatusSchema } from './dto/update-order-status.dto';
 import { ConfirmPaymentDto, confirmPaymentSchema } from './dto/confirm-payment.dto';
-import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto, paginationQuerySchema } from '../../common/dto/pagination.dto';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
@@ -29,7 +29,7 @@ export class OrdersController {
 
 	@Get('my')
 	getMyOrders(@CurrentUser() user: AuthenticatedUser, @Query() query: Record<string, string>) {
-		const parsedQuery: PaginationDto = paginationSchema.parse({
+		const parsedQuery: PaginationQueryDto = paginationQuerySchema.parse({
 			page: query.page ? Number(query.page) : undefined,
 			limit: query.limit ? Number(query.limit) : undefined
 		});
@@ -40,7 +40,7 @@ export class OrdersController {
 	@Get('all')
 	@Roles(Role.ADMIN)
 	getAllOrders(@Query() query: Record<string, string>) {
-		const parsedQuery: PaginationDto = paginationSchema.parse({
+		const parsedQuery: PaginationQueryDto = paginationQuerySchema.parse({
 			page: query.page ? Number(query.page) : undefined,
 			limit: query.limit ? Number(query.limit) : undefined
 		});

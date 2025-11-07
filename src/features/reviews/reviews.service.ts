@@ -11,7 +11,7 @@ import { OrderStatus, Review } from '@prisma/client';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { DeleteResponse } from '../../types/delete-response.type';
 import { PaginationService } from '../../common/services/pagination.service';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
@@ -126,7 +126,7 @@ export class ReviewsService {
 
 	async getProductReviews(
 		productId: string,
-		pagination: PaginationDto
+		pagination: PaginationQueryDto
 	): Promise<PaginatedResult<Review>> {
 		return this.paginationService.paginate(
 			this.prisma.review,

@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateReviewDto, createReviewSchema } from './dto/create-review.dto';
 import { UpdateReviewDto, updateReviewSchema } from './dto/update-review.dto';
-import { PaginationDto, paginationSchema } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto, paginationQuerySchema } from '../../common/dto/pagination.dto';
 import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 
 @Controller('reviews')
@@ -23,7 +23,7 @@ export class ReviewsController {
 
 	@Get('product/:productId')
 	getProductReviews(@Param('productId') productId: string, @Query() query: Record<string, string>) {
-		const parsedQuery: PaginationDto = paginationSchema.parse({
+		const parsedQuery: PaginationQueryDto = paginationQuerySchema.parse({
 			page: query.page ? Number(query.page) : undefined,
 			limit: query.limit ? Number(query.limit) : undefined,
 			sortBy: query.sortBy,

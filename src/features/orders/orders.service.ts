@@ -9,7 +9,7 @@ import { StockProcessor } from './utils/stock-processor';
 import { PaymentProcessor } from './utils/payment-processor';
 import { OrderProcessor } from './utils/order-processor';
 import { PaginationService } from '../../common/services/pagination.service';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
@@ -125,7 +125,7 @@ export class OrdersService {
 
 	async getUserOrders(
 		user: AuthenticatedUser,
-		pagination: PaginationDto
+		pagination: PaginationQueryDto
 	): Promise<PaginatedResult<Order>> {
 		return this.paginationService.paginate(
 			this.prisma.order,
@@ -141,7 +141,7 @@ export class OrdersService {
 		);
 	}
 
-	async getAllOrders(pagination: PaginationDto): Promise<PaginatedResult<Order>> {
+	async getAllOrders(pagination: PaginationQueryDto): Promise<PaginatedResult<Order>> {
 		return this.paginationService.paginate(
 			this.prisma.order,
 			{ createdAt: 'desc' },

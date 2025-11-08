@@ -2,7 +2,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
-import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { UpdateOrderStatusBodyDto } from './dto/update-order-status.dto';
 import { PaymentsService } from '../../core/payments/payments.service';
 import { CheckoutResponse } from '../../types/checkout-response.type';
 import { StockProcessor } from './utils/stock-processor';
@@ -159,7 +159,7 @@ export class OrdersService {
 		);
 	}
 
-	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusDto): Promise<Order> {
+	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusBodyDto): Promise<Order> {
 		const existingOrder = await this.prisma.order.findUnique({
 			where: { id: orderId },
 			include: {

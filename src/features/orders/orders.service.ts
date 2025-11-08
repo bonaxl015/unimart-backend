@@ -4,13 +4,13 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.inte
 import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
 import { UpdateOrderStatusBodyDto } from './dto/update-order-status.dto';
 import { PaymentsService } from '../../core/payments/payments.service';
-import { CheckoutResponse } from '../../types/checkout-response.type';
 import { StockProcessor } from './utils/stock-processor';
 import { PaymentProcessor } from './utils/payment-processor';
 import { OrderProcessor } from './utils/order-processor';
 import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { InitiateCheckoutResponseDto } from './dto/initiate-checkout.dto';
 
 @Injectable()
 export class OrdersService {
@@ -28,7 +28,7 @@ export class OrdersService {
 		this.orderProcessor = new OrderProcessor(prisma);
 	}
 
-	async initiateCheckout(user: AuthenticatedUser): Promise<CheckoutResponse> {
+	async initiateCheckout(user: AuthenticatedUser): Promise<InitiateCheckoutResponseDto> {
 		return await this.prisma.$transaction(async (tx) => {
 			const cartItems = await tx.cartItem.findMany({
 				where: { userId: user.userId },

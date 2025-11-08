@@ -9,10 +9,10 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.inte
 import { CreateReviewBodyDto } from './dto/create-review.dto';
 import { OrderStatus, Review } from '@prisma/client';
 import { UpdateReviewBodyDto } from './dto/update-review.dto';
-import { DeleteResponse } from '../../types/delete-response.type';
 import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -101,7 +101,7 @@ export class ReviewsService {
 		});
 	}
 
-	async deleteReview(user: AuthenticatedUser, reviewId: string): Promise<DeleteResponse> {
+	async deleteReview(user: AuthenticatedUser, reviewId: string): Promise<DeleteResponseDto> {
 		const review = await this.prisma.review.findUnique({
 			where: { id: reviewId }
 		});

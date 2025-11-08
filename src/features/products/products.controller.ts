@@ -12,6 +12,9 @@ import {
 import { ProductsService } from './products.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import {
 	CreateProductDto,
 	CreateProductResponseDto,
@@ -23,13 +26,18 @@ import {
 	UpdateProductParamDto,
 	UpdateProductResponseDto
 } from './dto/update-product.dto';
-import { AddProductImageDto, addProductImageSchema } from './dto/add-product-image.dto';
+import {
+	AddProductImageBodyDto,
+	addProductImageBodySchema,
+	AddProductImageResponseDto
+} from './dto/add-product-image.dto';
 import { Role } from '@prisma/client';
-import { UpdateProductStockDto, updateProductStockSchema } from './dto/update-product-stock.dto';
-import { PaginationQueryDto, paginationQuerySchema } from '../../common/dto/pagination.dto';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import type { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
+import {
+	UpdateProductStockBodyDto,
+	updateProductStockBodySchema,
+	UpdateProductStockParamDto,
+	UpdateProductStockResponseDto
+} from './dto/update-product-stock.dto';
 import {
 	ApiBadRequestResponse,
 	ApiBody,
@@ -37,14 +45,16 @@ import {
 	ApiOkResponse,
 	ApiTags
 } from '@nestjs/swagger';
-import { GlobalErrorDto } from '../../common/dto/global-error.dto';
 import { ApiZodQuery } from '../../docs/decorators/api-zod-query.decorator';
-import { GetAllProductResponseDto } from './dto/get-all-product.dto';
-import { GetByIdProductParamDto, GetByIdProductResponseDto } from './dto/get-by-id-product.dto';
 import { ApiZodParam } from '../../docs/decorators/api-zod-param.decorator';
 import { ProductSearchResponseDto } from './dto/search-product.dto';
 import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 import { DeleteProductParamDto } from './dto/delete-product.dto';
+import { DeleteProductImageParamDto } from './dto/delete-product-image.dto';
+import { GetAllProductResponseDto } from './dto/get-all-product.dto';
+import { GlobalErrorDto } from '../../common/dto/global-error.dto';
+import { GetByIdProductParamDto, GetByIdProductResponseDto } from './dto/get-by-id-product.dto';
+import { PaginationQueryDto, paginationQuerySchema } from '../../common/dto/pagination.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -129,9 +139,11 @@ export class ProductsController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Post('image')
 	@Roles(Role.ADMIN)
+	@ApiBody({ type: AddProductImageBodyDto })
+	@ApiOkResponse({ type: AddProductImageResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
 	addProductImage(@Body() body: unknown) {
-		const parsedData: AddProductImageDto = addProductImageSchema.parse(body);
+		const parsedData: AddProductImageBodyDto = addProductImageBodySchema.parse(body);
 
 		return this.productsService.addProductImage(parsedData);
 	}
@@ -139,6 +151,8 @@ export class ProductsController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Delete('image/:id')
 	@Roles(Role.ADMIN)
+	@ApiZodParam(DeleteProductImageParamDto)
+	@ApiOkResponse({ type: DeleteResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
 	deleteProductImage(@Param('id') id: string) {
 		return this.productsService.deleteProductImage(id);
@@ -147,9 +161,12 @@ export class ProductsController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@Patch('stock/:id')
 	@Roles(Role.ADMIN)
+	@ApiZodParam(UpdateProductStockParamDto)
+	@ApiBody({ type: UpdateProductStockBodyDto })
+	@ApiOkResponse({ type: UpdateProductStockResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
 	updateProductStock(@Param('id') id: string, @Body() body: unknown) {
-		const parsedProductStock: UpdateProductStockDto = updateProductStockSchema.parse(body);
+		const parsedProductStock: UpdateProductStockBodyDto = updateProductStockBodySchema.parse(body);
 
 		return this.productsService.updateProductStock(id, parsedProductStock);
 	}

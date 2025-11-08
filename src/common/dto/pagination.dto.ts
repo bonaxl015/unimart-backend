@@ -14,7 +14,7 @@ export const paginationQuerySchema = z.object({
 export const paginationResponseSchema = <T extends z.ZodTypeAny>(schemaObject: T) =>
 	z.object({
 		items: z.array(schemaObject),
-		total: z.number(),
+		total: z.number().default(1),
 		page: z.number().default(1),
 		limit: z.number().default(10)
 	});

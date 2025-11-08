@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
 import { productSchema } from './product.dto';
+import { productImageSchema } from './product-image.dto';
 
 export const getByIdProductParamSchema = z.object({
 	id: z.uuid()
@@ -9,7 +10,7 @@ export const getByIdProductParamSchema = z.object({
 export const getByIdProductResponseSchema = productSchema.extend({
 	ownerId: z.uuid(),
 	categoryId: z.uuid(),
-	images: z.array(z.any()),
+	images: z.array(productImageSchema),
 	reviews: z.array(z.any())
 });
 

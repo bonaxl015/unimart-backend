@@ -4,12 +4,12 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Prisma, Product, ProductImage } from '@prisma/client';
 import { UpdateProductBodyDto } from './dto/update-product.dto';
-import { DeleteResponse } from '../../types/delete-response.type';
-import { AddProductImageDto } from './dto/add-product-image.dto';
-import { UpdateProductStockDto } from './dto/update-product-stock.dto';
+import { AddProductImageBodyDto } from './dto/add-product-image.dto';
+import { UpdateProductStockBodyDto } from './dto/update-product-stock.dto';
 import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -99,7 +99,7 @@ export class ProductsService {
 		});
 	}
 
-	async deleteProduct(id: string): Promise<DeleteResponse> {
+	async deleteProduct(id: string): Promise<DeleteResponseDto> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -118,7 +118,7 @@ export class ProductsService {
 		};
 	}
 
-	async addProductImage(dto: AddProductImageDto): Promise<ProductImage> {
+	async addProductImage(dto: AddProductImageBodyDto): Promise<ProductImage> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: dto.productId }
 		});
@@ -135,7 +135,7 @@ export class ProductsService {
 		});
 	}
 
-	async deleteProductImage(imageId: string): Promise<DeleteResponse> {
+	async deleteProductImage(imageId: string): Promise<DeleteResponseDto> {
 		const image = await this.prisma.productImage.findUnique({
 			where: { id: imageId }
 		});
@@ -154,7 +154,7 @@ export class ProductsService {
 		};
 	}
 
-	async updateProductStock(productId: string, dto: UpdateProductStockDto): Promise<Product> {
+	async updateProductStock(productId: string, dto: UpdateProductStockBodyDto): Promise<Product> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: productId }
 		});

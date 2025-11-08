@@ -3,13 +3,13 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.inte
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { Prisma, Product, ProductImage } from '@prisma/client';
-import { UpdateProductDto } from './dto/update-product.dto';
-import { DeleteResponse } from '../../types/delete-response.type';
-import { AddProductImageDto } from './dto/add-product-image.dto';
-import { UpdateProductStockDto } from './dto/update-product-stock.dto';
+import { UpdateProductBodyDto } from './dto/update-product.dto';
+import { AddProductImageBodyDto } from './dto/add-product-image.dto';
+import { UpdateProductStockBodyDto } from './dto/update-product-stock.dto';
 import { PaginationService } from '../../common/services/pagination.service';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -18,7 +18,7 @@ export class ProductsService {
 		private readonly paginationService: PaginationService
 	) {}
 
-	async searchAndFilter(pagination: PaginationDto): Promise<PaginatedResult<Product>> {
+	async searchAndFilter(pagination: PaginationQueryDto): Promise<PaginatedResult<Product>> {
 		return this.paginationService.paginate(
 			this.prisma.product,
 			{ createdAt: 'desc' },
@@ -45,7 +45,7 @@ export class ProductsService {
 		});
 	}
 
-	async getAllProducts(pagination: PaginationDto): Promise<PaginatedResult<Product>> {
+	async getAllProducts(pagination: PaginationQueryDto): Promise<PaginatedResult<Product>> {
 		return await this.paginationService.paginate<Product>(
 			this.prisma.product,
 			{ createdAt: 'desc' },
@@ -81,7 +81,7 @@ export class ProductsService {
 		return product;
 	}
 
-	async updateProduct(id: string, data: UpdateProductDto): Promise<Product> {
+	async updateProduct(id: string, data: UpdateProductBodyDto): Promise<Product> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -99,7 +99,7 @@ export class ProductsService {
 		});
 	}
 
-	async deleteProduct(id: string): Promise<DeleteResponse> {
+	async deleteProduct(id: string): Promise<DeleteResponseDto> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -118,7 +118,7 @@ export class ProductsService {
 		};
 	}
 
-	async addProductImage(dto: AddProductImageDto): Promise<ProductImage> {
+	async addProductImage(dto: AddProductImageBodyDto): Promise<ProductImage> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: dto.productId }
 		});
@@ -135,7 +135,7 @@ export class ProductsService {
 		});
 	}
 
-	async deleteProductImage(imageId: string): Promise<DeleteResponse> {
+	async deleteProductImage(imageId: string): Promise<DeleteResponseDto> {
 		const image = await this.prisma.productImage.findUnique({
 			where: { id: imageId }
 		});
@@ -154,7 +154,7 @@ export class ProductsService {
 		};
 	}
 
-	async updateProductStock(productId: string, dto: UpdateProductStockDto): Promise<Product> {
+	async updateProductStock(productId: string, dto: UpdateProductStockBodyDto): Promise<Product> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: productId }
 		});

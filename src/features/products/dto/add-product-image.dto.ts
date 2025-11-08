@@ -1,8 +1,14 @@
 import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
+import { productImageSchema } from './product-image.dto';
 
-export const addProductImageSchema = z.object({
+export const addProductImageBodySchema = z.object({
 	productId: z.uuid(),
 	url: z.url().max(255)
 });
 
-export type AddProductImageDto = z.infer<typeof addProductImageSchema>;
+export const addProductImageResponseSchema = productImageSchema;
+
+export class AddProductImageBodyDto extends createZodDto(addProductImageBodySchema) {}
+
+export class AddProductImageResponseDto extends createZodDto(addProductImageResponseSchema) {}

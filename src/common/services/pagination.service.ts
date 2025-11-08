@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { PaginatedResult } from '../interfaces/paginated-result.interface';
-import { PaginationDto } from '../dto/pagination.dto';
+import { PaginationQueryDto } from '../dto/pagination.dto';
 import { SortOrder } from '../enums/sort-order';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class PaginationService {
 	async paginate<T>(
 		modelDelegate: any,
 		defaultOrderBy: Record<string, any> = { createdAt: 'desc' },
-		pagination: PaginationDto,
+		pagination: PaginationQueryDto,
 		searchableFields: string[] = [],
 		extraWhere: Record<string, any> = {},
 		include: Record<string, any> = {}

@@ -2,15 +2,15 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { Order, OrderStatus, PaymentStatus } from '@prisma/client';
-import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { UpdateOrderStatusBodyDto } from './dto/update-order-status.dto';
 import { PaymentsService } from '../../core/payments/payments.service';
-import { CheckoutResponse } from '../../types/checkout-response.type';
 import { StockProcessor } from './utils/stock-processor';
 import { PaymentProcessor } from './utils/payment-processor';
 import { OrderProcessor } from './utils/order-processor';
 import { PaginationService } from '../../common/services/pagination.service';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
+import { InitiateCheckoutResponseDto } from './dto/initiate-checkout.dto';
 
 @Injectable()
 export class OrdersService {
@@ -28,7 +28,7 @@ export class OrdersService {
 		this.orderProcessor = new OrderProcessor(prisma);
 	}
 
-	async initiateCheckout(user: AuthenticatedUser): Promise<CheckoutResponse> {
+	async initiateCheckout(user: AuthenticatedUser): Promise<InitiateCheckoutResponseDto> {
 		return await this.prisma.$transaction(async (tx) => {
 			const cartItems = await tx.cartItem.findMany({
 				where: { userId: user.userId },
@@ -125,7 +125,7 @@ export class OrdersService {
 
 	async getUserOrders(
 		user: AuthenticatedUser,
-		pagination: PaginationDto
+		pagination: PaginationQueryDto
 	): Promise<PaginatedResult<Order>> {
 		return this.paginationService.paginate(
 			this.prisma.order,
@@ -141,7 +141,7 @@ export class OrdersService {
 		);
 	}
 
-	async getAllOrders(pagination: PaginationDto): Promise<PaginatedResult<Order>> {
+	async getAllOrders(pagination: PaginationQueryDto): Promise<PaginatedResult<Order>> {
 		return this.paginationService.paginate(
 			this.prisma.order,
 			{ createdAt: 'desc' },
@@ -159,7 +159,7 @@ export class OrdersService {
 		);
 	}
 
-	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusDto): Promise<Order> {
+	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusBodyDto): Promise<Order> {
 		const existingOrder = await this.prisma.order.findUnique({
 			where: { id: orderId },
 			include: {

@@ -8,8 +8,8 @@ import { CartItem } from '@prisma/client';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
-import { UpdateCartItemDto } from './dto/update-cart-item.dto';
-import { DeleteResponse } from '../../types/delete-response.type';
+import { UpdateCartItemBodyDto } from './dto/update-cart-item.dto';
+import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 
 @Injectable()
 export class CartService {
@@ -72,7 +72,7 @@ export class CartService {
 	async updateItem(
 		user: AuthenticatedUser,
 		itemId: string,
-		dto: UpdateCartItemDto
+		dto: UpdateCartItemBodyDto
 	): Promise<CartItem> {
 		const existingCartItem = await this.prisma.cartItem.findUnique({
 			where: { id: itemId }
@@ -93,7 +93,7 @@ export class CartService {
 		});
 	}
 
-	async removeItem(user: AuthenticatedUser, itemId: string): Promise<DeleteResponse> {
+	async removeItem(user: AuthenticatedUser, itemId: string): Promise<DeleteResponseDto> {
 		const existingCartItem = await this.prisma.cartItem.findUnique({
 			where: { id: itemId }
 		});

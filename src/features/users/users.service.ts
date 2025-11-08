@@ -1,6 +1,6 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserBodyDto } from './dto/create-user.dto';
 import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
@@ -8,7 +8,7 @@ import bcrypt from 'bcrypt';
 export class UsersService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async createUser(data: CreateUserDto) {
+	async createUser(data: CreateUserBodyDto) {
 		const existingUser = await this.prisma.user.findUnique({
 			where: { email: data.email }
 		});
@@ -19,7 +19,7 @@ export class UsersService {
 
 		const hashedPassword = await bcrypt.hash(data.password, 12);
 
-		const user: Omit<User, 'password' | 'role'> = await this.prisma.user.create({
+		const user: Omit<User, 'password'> = await this.prisma.user.create({
 			data: {
 				email: data.email,
 				name: data.name,
@@ -29,6 +29,7 @@ export class UsersService {
 				id: true,
 				email: true,
 				name: true,
+				role: true,
 				createdAt: true,
 				updatedAt: true
 			}

@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-request.interface';
-import { CreateReviewDto } from './dto/create-review.dto';
+import { CreateReviewBodyDto } from './dto/create-review.dto';
 import { OrderStatus, Review } from '@prisma/client';
-import { UpdateReviewDto } from './dto/update-review.dto';
+import { UpdateReviewBodyDto } from './dto/update-review.dto';
 import { DeleteResponse } from '../../types/delete-response.type';
 import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
@@ -21,7 +21,7 @@ export class ReviewsService {
 		private readonly paginationService: PaginationService
 	) {}
 
-	async createReview(user: AuthenticatedUser, dto: CreateReviewDto): Promise<Review> {
+	async createReview(user: AuthenticatedUser, dto: CreateReviewBodyDto): Promise<Review> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: dto.productId }
 		});
@@ -78,7 +78,7 @@ export class ReviewsService {
 	async updateReview(
 		user: AuthenticatedUser,
 		reviewId: string,
-		dto: UpdateReviewDto
+		dto: UpdateReviewBodyDto
 	): Promise<Review> {
 		const review = await this.prisma.review.findUnique({
 			where: { id: reviewId }

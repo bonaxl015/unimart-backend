@@ -12,6 +12,7 @@ import { CommonModule } from './common/common.module';
 import { LoggerModule } from './core/logger/logger.module';
 import { AuditLoggerInterceptor } from './common/interceptors/audit-logger.interceptor';
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor';
+import { RedisModule } from './core/redis/redis.module';
 
 @Module({
 	imports: [
@@ -24,7 +25,8 @@ import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor'
 		CartModule,
 		OrdersModule,
 		ReviewsModule,
-		CommonModule
+		CommonModule,
+		RedisModule
 	],
 	providers: [ReservationCleanerService, AuditLoggerInterceptor, SanitizeInterceptor],
 	exports: [AuditLoggerInterceptor, SanitizeInterceptor]

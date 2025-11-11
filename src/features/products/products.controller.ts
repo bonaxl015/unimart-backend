@@ -50,7 +50,11 @@ import { ApiZodParam } from '../../docs/decorators/api-zod-param.decorator';
 import { ProductSearchResponseDto } from './dto/search-product.dto';
 import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
 import { DeleteProductParamDto } from './dto/delete-product.dto';
-import { DeleteProductImageParamDto } from './dto/delete-product-image.dto';
+import {
+	DeleteProductImageBodyDto,
+	deleteProductImageBodySchema,
+	DeleteProductImageParamDto
+} from './dto/delete-product-image.dto';
 import { GetAllProductResponseDto } from './dto/get-all-product.dto';
 import { GlobalErrorDto } from '../../common/dto/global-error.dto';
 import { GetByIdProductParamDto, GetByIdProductResponseDto } from './dto/get-by-id-product.dto';
@@ -152,10 +156,13 @@ export class ProductsController {
 	@Delete('image/:id')
 	@Roles(Role.ADMIN)
 	@ApiZodParam(DeleteProductImageParamDto)
+	@ApiBody({ type: DeleteProductImageBodyDto })
 	@ApiOkResponse({ type: DeleteResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	deleteProductImage(@Param('id') id: string) {
-		return this.productsService.deleteProductImage(id);
+	deleteProductImage(@Param('id') id: string, @Body() body: unknown) {
+		const parsedData: DeleteProductImageBodyDto = deleteProductImageBodySchema.parse(body);
+
+		return this.productsService.deleteProductImage(id, parsedData.productId);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)

@@ -13,12 +13,16 @@ import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
+import { CacheKeys } from '../../utils/cache-keys.util';
+import { RedisService } from '../../core/redis/redis.service';
+import { DEFAULT_LIST_REDIS_TTL } from '../../constants/default-redis-ttl';
 
 @Injectable()
 export class ReviewsService {
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly paginationService: PaginationService
+		private readonly paginationService: PaginationService,
+		private readonly redisService: RedisService
 	) {}
 
 	async createReview(user: AuthenticatedUser, dto: CreateReviewBodyDto): Promise<Review> {
@@ -57,7 +61,7 @@ export class ReviewsService {
 			throw new ConflictException('You already reviewed this product');
 		}
 
-		return await this.prisma.review.create({
+		const newReview = await this.prisma.review.create({
 			data: {
 				productId: dto.productId,
 				userId: user.userId,
@@ -73,6 +77,11 @@ export class ReviewsService {
 				}
 			}
 		});
+
+		await this.redisService.invalidatePages('productReviewList');
+		await this.redisService.invalidateKey(CacheKeys.productDetails(dto.productId));
+
+		return newReview;
 	}
 
 	async updateReview(
@@ -92,16 +101,25 @@ export class ReviewsService {
 			throw new ForbiddenException('Cannot edit this review');
 		}
 
-		return await this.prisma.review.update({
+		const updatedReview = await this.prisma.review.update({
 			where: { id: reviewId },
 			data: {
 				rating: dto.rating,
 				comment: dto.comment
 			}
 		});
+
+		await this.redisService.invalidatePages('productReviewList');
+		await this.redisService.invalidateKey(CacheKeys.productDetails(dto.productId));
+
+		return updatedReview;
 	}
 
-	async deleteReview(user: AuthenticatedUser, reviewId: string): Promise<DeleteResponseDto> {
+	async deleteReview(
+		user: AuthenticatedUser,
+		reviewId: string,
+		productId: string
+	): Promise<DeleteResponseDto> {
 		const review = await this.prisma.review.findUnique({
 			where: { id: reviewId }
 		});
@@ -118,6 +136,9 @@ export class ReviewsService {
 			where: { id: reviewId }
 		});
 
+		await this.redisService.invalidatePages('productReviewList');
+		await this.redisService.invalidateKey(CacheKeys.productDetails(productId));
+
 		return {
 			deleted: true,
 			message: 'Review deleted successfully'
@@ -128,7 +149,14 @@ export class ReviewsService {
 		productId: string,
 		pagination: PaginationQueryDto
 	): Promise<PaginatedResult<Review>> {
-		return this.paginationService.paginate(
+		const cachedKey = CacheKeys.paged('productReviewList', pagination.page, pagination.limit);
+		const cache = await this.redisService.get(cachedKey);
+
+		if (cache) {
+			return JSON.parse(cache);
+		}
+
+		const reviewList = await this.paginationService.paginate<Review>(
 			this.prisma.review,
 			{ createdAt: 'desc' },
 			pagination,
@@ -140,6 +168,10 @@ export class ReviewsService {
 				}
 			}
 		);
+
+		await this.redisService.set(cachedKey, JSON.stringify(reviewList), DEFAULT_LIST_REDIS_TTL);
+
+		return reviewList;
 	}
 
 	async getAverageRating(productId: string) {

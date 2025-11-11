@@ -35,7 +35,11 @@ import {
 	GetAverageRatingResponseSchema
 } from './dto/get-average-rating.dto';
 import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
-import { DeleteReviewParamSchema } from './dto/delete-review.dto';
+import {
+	deleteReviewBodySchema,
+	DeleteReviewBodySchema,
+	DeleteReviewParamSchema
+} from './dto/delete-review.dto';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -92,9 +96,12 @@ export class ReviewsController {
 	@UseGuards(JwtAuthGuard)
 	@Delete('delete/:id')
 	@ApiZodParam(DeleteReviewParamSchema)
+	@ApiBody({ type: DeleteReviewBodySchema })
 	@ApiOkResponse({ type: DeleteResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	delete(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-		return this.reviewService.deleteReview(user, id);
+	delete(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() body: unknown) {
+		const parsedBody: DeleteReviewBodySchema = deleteReviewBodySchema.parse(body);
+
+		return this.reviewService.deleteReview(user, id, parsedBody.productId);
 	}
 }

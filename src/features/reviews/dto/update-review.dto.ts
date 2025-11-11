@@ -7,6 +7,7 @@ export const updateReviewParamSchema = z.object({
 });
 
 export const updateReviewBodySchema = z.object({
+	productId: z.uuid(),
 	rating: z.number().int().min(1).max(5).optional(),
 	comment: z.string().max(500).optional()
 });

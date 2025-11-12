@@ -52,6 +52,7 @@ export class ProductsService {
 		});
 
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return newProduct;
 	}
@@ -112,7 +113,11 @@ export class ProductsService {
 		return product;
 	}
 
-	async updateProduct(id: string, data: UpdateProductBodyDto): Promise<Product> {
+	async updateProduct(
+		user: AuthenticatedUser,
+		id: string,
+		data: UpdateProductBodyDto
+	): Promise<Product> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -131,11 +136,12 @@ export class ProductsService {
 
 		await this.redisService.invalidateKey(CacheKeys.productDetails(id));
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return updatedProduct;
 	}
 
-	async deleteProduct(id: string): Promise<DeleteResponseDto> {
+	async deleteProduct(user: AuthenticatedUser, id: string): Promise<DeleteResponseDto> {
 		const existingProduct = await this.prisma.product.findUnique({
 			where: { id }
 		});
@@ -150,6 +156,7 @@ export class ProductsService {
 
 		await this.redisService.invalidateKey(CacheKeys.productDetails(id));
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return {
 			deleted: true,
@@ -157,7 +164,10 @@ export class ProductsService {
 		};
 	}
 
-	async addProductImage(dto: AddProductImageBodyDto): Promise<ProductImage> {
+	async addProductImage(
+		user: AuthenticatedUser,
+		dto: AddProductImageBodyDto
+	): Promise<ProductImage> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: dto.productId }
 		});
@@ -175,11 +185,16 @@ export class ProductsService {
 
 		await this.redisService.invalidateKey(CacheKeys.productDetails(dto.productId));
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return updatedProductImage;
 	}
 
-	async deleteProductImage(imageId: string, productId: string): Promise<DeleteResponseDto> {
+	async deleteProductImage(
+		user: AuthenticatedUser,
+		imageId: string,
+		productId: string
+	): Promise<DeleteResponseDto> {
 		const image = await this.prisma.productImage.findUnique({
 			where: { id: imageId }
 		});
@@ -194,6 +209,7 @@ export class ProductsService {
 
 		await this.redisService.invalidateKey(CacheKeys.productDetails(productId));
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return {
 			deleted: true,
@@ -201,7 +217,11 @@ export class ProductsService {
 		};
 	}
 
-	async updateProductStock(productId: string, dto: UpdateProductStockBodyDto): Promise<Product> {
+	async updateProductStock(
+		user: AuthenticatedUser,
+		productId: string,
+		dto: UpdateProductStockBodyDto
+	): Promise<Product> {
 		const product = await this.prisma.product.findUnique({
 			where: { id: productId }
 		});
@@ -217,6 +237,7 @@ export class ProductsService {
 
 		await this.redisService.invalidateKey(CacheKeys.productDetails(productId));
 		await this.redisService.invalidatePages('productList');
+		await this.redisService.invalidateKey(CacheKeys.custom('productList:user', user.userId));
 
 		return updatedProduct;
 	}

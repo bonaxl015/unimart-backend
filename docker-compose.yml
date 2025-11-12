@@ -4,7 +4,7 @@ services:
     container_name: unimart-backend
     restart: always
     env_file:
-      - .env
+      - .env.local
     ports:
       - '5055:5055'
     command: ['yarn', 'start:prod']

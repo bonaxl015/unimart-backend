@@ -10,16 +10,31 @@ import { PrismaService } from '../../core/prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemBodyDto } from './dto/update-cart-item.dto';
 import { DeleteResponseDto } from '../../common/dto/delete-response.dto';
+import { RedisService } from '../../core/redis/redis.service';
+import { CacheKeys } from '../../utils/cache-keys.util';
+import { DEFAULT_LIST_REDIS_TTL } from '../../constants/default-redis-ttl';
 
 @Injectable()
 export class CartService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly redisService: RedisService
+	) {}
 
 	async getUserCart(user: AuthenticatedUser): Promise<CartItem[]> {
+		const cachedKey = CacheKeys.custom('cartList:user', user.userId);
+		const cache = await this.redisService.get(cachedKey);
+
+		if (cache) {
+			return JSON.parse(cache);
+		}
+
 		const userCartList: CartItem[] = await this.prisma.cartItem.findMany({
 			where: { userId: user.userId },
 			include: { product: true }
 		});
+
+		await this.redisService.set(cachedKey, JSON.stringify(userCartList), DEFAULT_LIST_REDIS_TTL);
 
 		return userCartList;
 	}
@@ -50,7 +65,7 @@ export class CartService {
 			throw new ConflictException('Product already in cart');
 		}
 
-		return await this.prisma.cartItem.create({
+		const newCartItem = await this.prisma.cartItem.create({
 			data: {
 				userId: user.userId,
 				productId: dto.productId,
@@ -67,6 +82,10 @@ export class CartService {
 				}
 			}
 		});
+
+		await this.redisService.invalidateKey(CacheKeys.custom('cartList:user', user.userId));
+
+		return newCartItem;
 	}
 
 	async updateItem(
@@ -86,11 +105,15 @@ export class CartService {
 			throw new ForbiddenException();
 		}
 
-		return await this.prisma.cartItem.update({
+		const updatedCartItem = await this.prisma.cartItem.update({
 			where: { id: itemId },
 			data: { quantity: dto.quantity },
 			include: { product: true }
 		});
+
+		await this.redisService.invalidateKey(CacheKeys.custom('cartList:user', user.userId));
+
+		return updatedCartItem;
 	}
 
 	async removeItem(user: AuthenticatedUser, itemId: string): Promise<DeleteResponseDto> {
@@ -109,6 +132,8 @@ export class CartService {
 		await this.prisma.cartItem.delete({
 			where: { id: itemId }
 		});
+
+		await this.redisService.invalidateKey(CacheKeys.custom('cartList:user', user.userId));
 
 		return {
 			deleted: true,

@@ -4,38 +4,94 @@ import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class RedisService implements OnModuleInit {
-	private client: RedisClientType | null = null;
+	private static client: RedisClientType | null = null;
 
-	private isConnected = false;
+	private static isConnected = false;
+
+	private static retries = 0;
 
 	constructor(private readonly logger: Logger) {}
 
 	async onModuleInit() {
-		try {
-			if (!process.env.REDIS_URL) {
-				this.logger.warn('Redis config not found - running without redis');
-				return;
-			}
-
-			this.client = createClient({
-				url: process.env.REDIS_URL
-			});
-
-			this.client.on('connect', () => {
-				this.logger.log('Connected to redis');
-				this.isConnected = true;
-			});
-
-			this.client.on('error', (error) => {
-				this.logger.error('Redis error: ', error);
-				this.isConnected = false;
-			});
-
-			await this.client.connect();
-		} catch (error) {
-			this.logger.error('Failed to connect to Redis: ', error);
-			this.isConnected = false;
+		if (!process.env.REDIS_URL) {
+			this.logger.warn('Redis config not found - running without redis');
+			return;
 		}
+
+		if (RedisService.client && RedisService.isConnected) {
+			this.logger.log('Reusing existing Redis connection');
+			return;
+		}
+
+		await this.tryConnect();
+	}
+
+	async onModuleDestroy() {
+		if (RedisService.client && RedisService.isConnected) {
+			await RedisService.client.quit();
+
+			this.logger.log('Redis connection closed');
+		}
+	}
+
+	private async tryConnect(maxRetries = 5, delayMs = 1000) {
+		while (RedisService.retries < maxRetries) {
+			try {
+				this.logger.log(
+					`Attempting Redis connection try (${RedisService.retries + 1}/${maxRetries})...`
+				);
+
+				const client = createClient({
+					url: process.env.REDIS_URL
+				});
+
+				client.on('connect', () => {
+					this.logger.log('Connected to redis');
+					RedisService.isConnected = true;
+				});
+
+				client.on('error', (error) => {
+					this.logger.error('Redis error: ', error);
+				});
+
+				await client.connect();
+
+				RedisService.client = client as RedisClientType;
+
+				return;
+			} catch (error) {
+				RedisService.retries++;
+
+				this.logger.error(
+					`Redis connection failes (attempt ${RedisService.retries}/${maxRetries}): ${error.message}`
+				);
+
+				if (RedisService.retries >= maxRetries) {
+					this.logger.log(
+						`Max Redis connection attemps reaached ${maxRetries}. App will run without caching.`
+					);
+
+					RedisService.client = null;
+					RedisService.isConnected = false;
+
+					return;
+				}
+
+				await this.delay(delayMs);
+			}
+		}
+	}
+
+	private delay(ms: number) {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	get client(): RedisClientType | null {
+		return RedisService.client;
+	}
+
+	get isConnected(): boolean {
+		return RedisService.isConnected;
 	}
 
 	private hasInstance(): boolean {

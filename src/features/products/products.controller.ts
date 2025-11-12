@@ -124,10 +124,10 @@ export class ProductsController {
 	@ApiBody({ type: UpdateProductBodyDto })
 	@ApiOkResponse({ type: UpdateProductResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	update(@Param('id') id: string, @Body() body: unknown) {
+	update(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string, @Body() body: unknown) {
 		const parsedData: UpdateProductBodyDto = updateProductBodySchema.parse(body);
 
-		return this.productsService.updateProduct(id, parsedData);
+		return this.productsService.updateProduct(user, id, parsedData);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -136,8 +136,8 @@ export class ProductsController {
 	@ApiZodParam(DeleteProductParamDto)
 	@ApiOkResponse({ type: DeleteResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	delete(@Param('id') id: string) {
-		return this.productsService.deleteProduct(id);
+	delete(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+		return this.productsService.deleteProduct(user, id);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -146,10 +146,10 @@ export class ProductsController {
 	@ApiBody({ type: AddProductImageBodyDto })
 	@ApiOkResponse({ type: AddProductImageResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	addProductImage(@Body() body: unknown) {
+	addProductImage(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
 		const parsedData: AddProductImageBodyDto = addProductImageBodySchema.parse(body);
 
-		return this.productsService.addProductImage(parsedData);
+		return this.productsService.addProductImage(user, parsedData);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -159,10 +159,14 @@ export class ProductsController {
 	@ApiBody({ type: DeleteProductImageBodyDto })
 	@ApiOkResponse({ type: DeleteResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	deleteProductImage(@Param('id') id: string, @Body() body: unknown) {
+	deleteProductImage(
+		@CurrentUser() user: AuthenticatedUser,
+		@Param('id') id: string,
+		@Body() body: unknown
+	) {
 		const parsedData: DeleteProductImageBodyDto = deleteProductImageBodySchema.parse(body);
 
-		return this.productsService.deleteProductImage(id, parsedData.productId);
+		return this.productsService.deleteProductImage(user, id, parsedData.productId);
 	}
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
@@ -172,9 +176,13 @@ export class ProductsController {
 	@ApiBody({ type: UpdateProductStockBodyDto })
 	@ApiOkResponse({ type: UpdateProductStockResponseDto })
 	@ApiBadRequestResponse({ type: GlobalErrorDto })
-	updateProductStock(@Param('id') id: string, @Body() body: unknown) {
+	updateProductStock(
+		@CurrentUser() user: AuthenticatedUser,
+		@Param('id') id: string,
+		@Body() body: unknown
+	) {
 		const parsedProductStock: UpdateProductStockBodyDto = updateProductStockBodySchema.parse(body);
 
-		return this.productsService.updateProductStock(id, parsedProductStock);
+		return this.productsService.updateProductStock(user, id, parsedProductStock);
 	}
 }

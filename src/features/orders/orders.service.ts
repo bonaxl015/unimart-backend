@@ -11,6 +11,9 @@ import { PaginationService } from '../../common/services/pagination.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
 import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 import { InitiateCheckoutResponseDto } from './dto/initiate-checkout.dto';
+import { RedisService } from '../../core/redis/redis.service';
+import { CacheKeys } from '../../utils/cache-keys.util';
+import { DEFAULT_LIST_REDIS_TTL } from '../../constants/default-redis-ttl';
 
 @Injectable()
 export class OrdersService {
@@ -21,7 +24,8 @@ export class OrdersService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly paymentsService: PaymentsService,
-		private readonly paginationService: PaginationService
+		private readonly paginationService: PaginationService,
+		private readonly redisService: RedisService
 	) {
 		this.stockProcessor = new StockProcessor(prisma);
 		this.paymentProcessor = new PaymentProcessor(paymentsService);
@@ -54,6 +58,8 @@ export class OrdersService {
 			const paymentIntent = await this.paymentProcessor.createPayment(total, order.id, user.userId);
 
 			await this.orderProcessor.attachPaymentIntent(order.id, paymentIntent.id, tx);
+
+			await this.redisService.invalidateKey(CacheKeys.custom('cartList:user', user.userId));
 
 			return {
 				orderId: order.id,
@@ -120,6 +126,8 @@ export class OrdersService {
 			where: { userId: order.userId }
 		});
 
+		await this.redisService.invalidatePages('orderList');
+
 		return updatedOrder;
 	}
 
@@ -127,7 +135,7 @@ export class OrdersService {
 		user: AuthenticatedUser,
 		pagination: PaginationQueryDto
 	): Promise<PaginatedResult<Order>> {
-		return this.paginationService.paginate(
+		return this.paginationService.paginate<Order>(
 			this.prisma.order,
 			{ createdAt: 'desc' },
 			pagination,
@@ -142,7 +150,14 @@ export class OrdersService {
 	}
 
 	async getAllOrders(pagination: PaginationQueryDto): Promise<PaginatedResult<Order>> {
-		return this.paginationService.paginate(
+		const cachedKey = CacheKeys.paged('orderList', pagination.page, pagination.limit);
+		const cache = await this.redisService.get(cachedKey);
+
+		if (cache) {
+			return JSON.parse(cache);
+		}
+
+		const orderList = this.paginationService.paginate<Order>(
 			this.prisma.order,
 			{ createdAt: 'desc' },
 			pagination,
@@ -157,6 +172,10 @@ export class OrdersService {
 				}
 			}
 		);
+
+		await this.redisService.set(cachedKey, JSON.stringify(orderList), DEFAULT_LIST_REDIS_TTL);
+
+		return orderList;
 	}
 
 	async updateOrderStatus(orderId: string, dto: UpdateOrderStatusBodyDto): Promise<Order> {
@@ -198,6 +217,8 @@ export class OrdersService {
 				}
 			}
 		});
+
+		await this.redisService.invalidatePages('orderList');
 
 		return updateOrderStatus;
 	}
